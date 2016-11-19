@@ -25,7 +25,7 @@ namespace PlanetSimulationGame
     {
         public const float GAME_SCALE = 10f;
         public const double STEP_SPEED = 0.1d;
-        public const int STEP_AMOUNT = 1;
+        public const int STEP_AMOUNT = 100;
         private const int POP_AMOUNT = 5;
         private const int BUSH_AMOUNT = 1500;
         public const int PLANET_WIDTH = 50;
@@ -42,6 +42,7 @@ namespace PlanetSimulationGame
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             TargetElapsedTime = new TimeSpan(0, 0, 0, 0, (int) (STEP_SPEED*1000d));
+            IsMouseVisible = true;
         }
 
         protected override void LoadContent()
@@ -52,7 +53,7 @@ namespace PlanetSimulationGame
             _pixel = new Texture2D(_graphics.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             _pixel.SetData(new[] { Color.White });
 
-            _planet = new Planet(PLANET_WIDTH, PLANET_HEIGHT);
+            _planet = new Planet(PLANET_WIDTH, PLANET_HEIGHT, PlanetSimulationConfig.DefaultConfig);
             _planet.InitRandom(POP_AMOUNT, BUSH_AMOUNT);
 
             _debugFont = Content.Load<SpriteFont>("DebugFont");

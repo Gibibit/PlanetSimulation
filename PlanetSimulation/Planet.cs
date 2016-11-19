@@ -15,16 +15,7 @@ namespace PlanetSimulation
 
     public class Planet
     {
-        public float BushBerryGrowChance = 0.15f;
-        public int BushMaxBerries = 15;
-        public int BushStartingBerries = 3;
-        public int PopBerryConsumption = 3;
-        public int PopForagingRange = 12;
-        public int PopStartingFullness = 25;
-        public int PopMaxAge = 80;
-        public int PopBreedingAge = 15;
-        public int PopBreedingFullness = 20;
-        public int PopBreedingCost = 10;
+        public readonly PlanetSimulationConfig Config;
 
         public int CurrentStep { get; private set; }
         public int MaxGeneration { get; private set; }
@@ -38,10 +29,11 @@ namespace PlanetSimulation
         private List<Pop> _newPops;
         public Random Random;
 
-        public Planet(int width, int height)
+        public Planet(int width, int height, PlanetSimulationConfig config)
         {
             Width = width;
             Height = height;
+            Config = config;
 
             Random = new Random();
 
@@ -76,7 +68,7 @@ namespace PlanetSimulation
         public void Step()
         {
             CurrentStep++;
-            Population.RemoveAll(p => p.Age >= PopMaxAge || p.Fullness <= 0);
+            Population.RemoveAll(p => p.Age >= Config.PopMaxAge || p.Fullness <= 0);
             Population = Population.Concat(_newPops).ToList();
             _newPops.Clear();
             Population.ForEach(p => p.Step());
@@ -90,15 +82,31 @@ namespace PlanetSimulation
         }
     }
 
-    public class SurfaceObject
+    public struct PlanetSimulationConfig
     {
-        public Planet Planet;
-        public Point Position;
+        public float BushBerryGrowChance;
+        public int BushMaxBerries;
+        public int BushStartingBerries;
+        public int PopBerryConsumption;
+        public int PopForagingRange;
+        public int PopStartingFullness;
+        public int PopMaxAge;
+        public int PopBreedingAge;
+        public int PopBreedingFullness;
+        public int PopBreedingCost;
 
-        public SurfaceObject(Planet planet, Point position)
+        public static PlanetSimulationConfig DefaultConfig => new PlanetSimulationConfig()
         {
-            Planet = planet;
-            Position = position;
-        }
+            BushBerryGrowChance = 0.15f,
+            BushMaxBerries = 15,
+            BushStartingBerries = 3,
+            PopBerryConsumption = 3,
+            PopForagingRange = 15,
+            PopStartingFullness = 25,
+            PopMaxAge = 60,
+            PopBreedingAge = 15,
+            PopBreedingFullness = 15,
+            PopBreedingCost = 5,
+        };
     }
 }

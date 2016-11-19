@@ -11,7 +11,7 @@ namespace PlanetSimulation
         public int Age;
         public readonly int Generation;
 
-        public float AgeFraction => (float)Age/Planet.PopMaxAge;
+        public float AgeFraction => (float)Age/Planet.Config.PopMaxAge;
 
         private readonly Random _random;
 
@@ -19,7 +19,7 @@ namespace PlanetSimulation
         {
             _random = planet.Random;
             Generation = generation;
-            Fullness = Planet.PopStartingFullness;
+            Fullness = Planet.Config.PopStartingFullness;
         }
 
         public void Step()
@@ -30,7 +30,7 @@ namespace PlanetSimulation
             var bush = Planet.Bushes.Find(b => b.Position == Position);
             if (bush != null)
             {
-                var berries = Math.Min(bush.Berries, Planet.PopBerryConsumption);
+                var berries = Math.Min(bush.Berries, Planet.Config.PopBerryConsumption);
                 Fullness += berries;
                 bush.Berries -= berries;
                 if(bush.Berries <= 0) Planet.Bushes.Remove(bush);
@@ -38,7 +38,7 @@ namespace PlanetSimulation
             else
             {
                 // Find bushes within foraging range
-                var bushes = Planet.Bushes.FindAll(b => b.Position.Manhattan(Position) <= Planet.PopForagingRange);
+                var bushes = Planet.Bushes.FindAll(b => b.Position.Manhattan(Position) <= Planet.Config.PopForagingRange);
                 if (bushes.Count > 0)
                 {
                     // Find closest bush
@@ -58,9 +58,9 @@ namespace PlanetSimulation
                 }
             }
 
-            if (Fullness >= Planet.PopBreedingFullness && Age > Planet.PopBreedingAge)
+            if (Fullness >= Planet.Config.PopBreedingFullness && Age > Planet.Config.PopBreedingAge)
             {
-                Fullness -= Planet.PopBreedingCost;
+                Fullness -= Planet.Config.PopBreedingCost;
                 Planet.AddPop(Position, Generation + 1);
             }
         }

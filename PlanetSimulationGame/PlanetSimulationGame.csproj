@@ -12,7 +12,7 @@
     <RootNamespace>PlanetSimulationGame</RootNamespace>
     <AssemblyName>PlanetSimulationGame</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
+    <MonoGamePlatform>WindowsGL</MonoGamePlatform>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -21,8 +21,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
+    <MonoGamePlatform>WindowsGL</MonoGamePlatform>
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;LINUX</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;LINUX</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -30,6 +31,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
+    <MonoGamePlatform>WindowsGL</MonoGamePlatform>
     <OutputPath>bin\$(MonoGamePlatform)\$(Platform)\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE;LINUX</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -46,9 +48,6 @@
   <ItemGroup>
     <Reference Include="OpenTK">
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\OpenTK.dll</HintPath>
-    </Reference>
-    <Reference Include="NVorbis">
-      <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\NVorbis.dll</HintPath>
     </Reference>
     <Reference Include="MonoGame.Framework">
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\MonoGame.Framework.dll</HintPath>
