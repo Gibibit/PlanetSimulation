@@ -68,45 +68,23 @@ namespace PlanetSimulation
         public void Step()
         {
             CurrentStep++;
+
+            // Remove aged and starved pops
             Population.RemoveAll(p => p.Age >= Config.PopMaxAge || p.Fullness <= 0);
+            // Add newborn pops
             Population = Population.Concat(_newPops).ToList();
             _newPops.Clear();
+            // Remove aged bushes
+            Bushes.RemoveAll(b => b.Age >= Config.BushMaxAge || b.Age >= Config.BushMaxGrowAge && b.Berries < 0);
+
+            var newBushes = 0;
+            for(int i = 0; i < Config.BushMaxGrow; i++)
+                if (Random.NextDouble() < Config.BushGrowChance) newBushes++;
+            for (int i = 0; i < newBushes; i++) Bushes.Add(new Bush(this, Random.NextPoint(0, 0, Width, Height)));
+
             Population.ForEach(p => p.Step());
             Bushes.ForEach(b => b.Step());
             
-            var newBushes = Random.Next(5);
-            for (int i = 0; i < newBushes; i++)
-            {
-                Bushes.Add(new Bush(this, Random.NextPoint(0, 0, Width, Height)));
-            }
         }
-    }
-
-    public struct PlanetSimulationConfig
-    {
-        public float BushBerryGrowChance;
-        public int BushMaxBerries;
-        public int BushStartingBerries;
-        public int PopBerryConsumption;
-        public int PopForagingRange;
-        public int PopStartingFullness;
-        public int PopMaxAge;
-        public int PopBreedingAge;
-        public int PopBreedingFullness;
-        public int PopBreedingCost;
-
-        public static PlanetSimulationConfig DefaultConfig => new PlanetSimulationConfig()
-        {
-            BushBerryGrowChance = 0.15f,
-            BushMaxBerries = 15,
-            BushStartingBerries = 3,
-            PopBerryConsumption = 3,
-            PopForagingRange = 15,
-            PopStartingFullness = 25,
-            PopMaxAge = 60,
-            PopBreedingAge = 15,
-            PopBreedingFullness = 15,
-            PopBreedingCost = 5,
-        };
     }
 }

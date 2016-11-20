@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -6,30 +7,29 @@ using PlanetSimulation;
 
 namespace PlanetSimulationGame
 {
-    public static class ExtensionsMethods
-    {
-        public const float GAME_SCALE = PSGame.GAME_SCALE;
-
-        public static void Draw(this SpriteBatch sb, Texture2D texture, Bush b)
-            => sb.Draw(texture, b.Position.ToVector2()*GAME_SCALE, null, 
-                Color.Lerp(Color.LightGreen, Color.DarkGreen, b.BerryFraction), 
-                0f, Vector2.Zero, Vector2.One*GAME_SCALE, SpriteEffects.None, 0f);
-
-        public static void Draw(this SpriteBatch sb, Texture2D texture, Pop p)
-            => sb.Draw(texture, p.Position.ToVector2()*GAME_SCALE, null, 
-                Color.Lerp(Color.Black, Color.LightGray, p.AgeFraction), 
-                0f, Vector2.Zero, Vector2.One*GAME_SCALE, SpriteEffects.None, 0f);
-    }
-
     public class PSGame : Game
     {
-        public const float GAME_SCALE = 10f;
-        public const double STEP_SPEED = 0.1d;
-        public const int STEP_AMOUNT = 100;
-        private const int POP_AMOUNT = 5;
-        private const int BUSH_AMOUNT = 1500;
+        private int _stepDelay = 16;
+
+        public int StepDelay
+        {
+            get
+            {
+                return _stepDelay;
+            }
+            set
+            {
+                _stepDelay = MathHelper.Clamp(value, 1, 500);
+                TargetElapsedTime = new TimeSpan(0, 0, 0, 0, _stepDelay);
+            }
+        }
+
+        public const float GAME_SCALE = 25f;
+        public const int STEP_AMOUNT = 1;
+        public const int POP_AMOUNT = 3;
+        public const int BUSH_AMOUNT = 10;
         public const int PLANET_WIDTH = 50;
-        public const int PLANET_HEIGHT = 50;
+        public const int PLANET_HEIGHT = 30;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -41,7 +41,7 @@ namespace PlanetSimulationGame
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            TargetElapsedTime = new TimeSpan(0, 0, 0, 0, (int) (STEP_SPEED*1000d));
+            TargetElapsedTime = new TimeSpan(0, 0, 0, 0, _stepDelay);
             IsMouseVisible = true;
         }
 
@@ -59,7 +59,7 @@ namespace PlanetSimulationGame
             _debugFont = Content.Load<SpriteFont>("DebugFont");
 
             _graphics.PreferredBackBufferWidth = (int) (_planet.Width*GAME_SCALE);
-            _graphics.PreferredBackBufferHeight = (int) (_planet.Height*GAME_SCALE) + 20;
+            _graphics.PreferredBackBufferHeight = (int) (_planet.Height*GAME_SCALE) + (int) _debugFont.MeasureString("X").Y;
             _graphics.ApplyChanges();
         }
 
@@ -71,6 +71,10 @@ namespace PlanetSimulationGame
             {
                 _planet.Step();
             }
+
+            var kb = Keyboard.GetState();
+            if (kb.IsKeyDown(Keys.OemPlus)) StepDelay += StepDelay/10 + 1;
+            if (kb.IsKeyDown(Keys.OemMinus)) StepDelay -= StepDelay/10 + 1;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -83,7 +87,9 @@ namespace PlanetSimulationGame
             _planet.Bushes.ForEach(b => _spriteBatch.Draw(_pixel, b));
             _planet.Population.ForEach(p => _spriteBatch.Draw(_pixel, p));
             _spriteBatch.DrawString(_debugFont, 
-                $"Step {_planet.CurrentStep} | Max generation {_planet.MaxGeneration}", 
+                $"Step {_planet.CurrentStep} | Step delay {StepDelay} | Pops {_planet.Population.Count}" +
+                $" | PAAF {Math.Round(_planet.Population.Average(p => p.AgeFraction), 1)} | Max generation {_planet.MaxGeneration}" +
+                $" | Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.Bushes.Average(b => b.AgeFraction), 1)}", 
                 new Vector2(0f, _planet.Height*GAME_SCALE), Color.DarkGray);
             _spriteBatch.End();
         }
