@@ -21,8 +21,8 @@
 
         public static PlanetSimulationConfig DefaultConfig => new PlanetSimulationConfig()
         {
-            BushMaxGrow = 3,
-            BushGrowChance = 0.05f,
+            BushMaxGrow = 5,
+            BushGrowChance = 0.1f,
             BushMaxAge = 280,
             BushMaxGrowAge = 200,
             BushBerryGrowChance = 0.25f,

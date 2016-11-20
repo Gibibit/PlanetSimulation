@@ -9,7 +9,7 @@ namespace PlanetSimulationGame
 {
     public class PSGame : Game
     {
-        private int _stepDelay = 16;
+        private int _stepDelay = 100;
 
         public int StepDelay
         {
@@ -24,12 +24,12 @@ namespace PlanetSimulationGame
             }
         }
 
-        public const float GAME_SCALE = 25f;
+        public const float GAME_SCALE = 15f;
         public const int STEP_AMOUNT = 1;
         public const int POP_AMOUNT = 3;
         public const int BUSH_AMOUNT = 10;
-        public const int PLANET_WIDTH = 50;
-        public const int PLANET_HEIGHT = 30;
+        public const int PLANET_WIDTH = 75;
+        public const int PLANET_HEIGHT = 50;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -87,9 +87,9 @@ namespace PlanetSimulationGame
             _planet.Bushes.ForEach(b => _spriteBatch.Draw(_pixel, b));
             _planet.Population.ForEach(p => _spriteBatch.Draw(_pixel, p));
             _spriteBatch.DrawString(_debugFont, 
-                $"Step {_planet.CurrentStep} | Step delay {StepDelay} | Pops {_planet.Population.Count}" +
-                $" | PAAF {Math.Round(_planet.Population.Average(p => p.AgeFraction), 1)} | Max generation {_planet.MaxGeneration}" +
-                $" | Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.Bushes.Average(b => b.AgeFraction), 1)}", 
+                $"Step {_planet.CurrentStep} | DT {StepDelay} | Pops {_planet.Population.Count}" +
+                $" | PAAF {Math.Round(_planet.Population.Average(p => p.AgeFraction), 2)} | Generation {_planet.MaxGeneration}" +
+                $" | Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.Bushes.Average(b => b.AgeFraction), 2)}", 
                 new Vector2(0f, _planet.Height*GAME_SCALE), Color.DarkGray);
             _spriteBatch.End();
         }
