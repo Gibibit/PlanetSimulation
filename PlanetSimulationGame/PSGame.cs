@@ -9,7 +9,7 @@ namespace PlanetSimulationGame
 {
     public class PSGame : Game
     {
-        private int _stepDelay = 100;
+        private int _stepDelay = 33;
 
         public int StepDelay
         {
@@ -24,12 +24,8 @@ namespace PlanetSimulationGame
             }
         }
 
-        public const float GAME_SCALE = 15f;
+        public const float DRAW_SCALE = 30f;
         public const int STEP_AMOUNT = 1;
-        public const int POP_AMOUNT = 3;
-        public const int BUSH_AMOUNT = 10;
-        public const int PLANET_WIDTH = 75;
-        public const int PLANET_HEIGHT = 50;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -53,13 +49,13 @@ namespace PlanetSimulationGame
             _pixel = new Texture2D(_graphics.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             _pixel.SetData(new[] { Color.White });
 
-            _planet = new Planet(PLANET_WIDTH, PLANET_HEIGHT, PlanetSimulationConfig.DefaultConfig);
-            _planet.InitRandom(POP_AMOUNT, BUSH_AMOUNT);
+            _planet = new Planet(PlanetSimulationConfig.DefaultConfig);
+            _planet.InitRandom();
 
             _debugFont = Content.Load<SpriteFont>("DebugFont");
 
-            _graphics.PreferredBackBufferWidth = (int) (_planet.Width*GAME_SCALE);
-            _graphics.PreferredBackBufferHeight = (int) (_planet.Height*GAME_SCALE) + (int) _debugFont.MeasureString("X").Y;
+            _graphics.PreferredBackBufferWidth = (int) (_planet.Config.Width *DRAW_SCALE);
+            _graphics.PreferredBackBufferHeight = (int) (_planet.Config.Height *DRAW_SCALE) + (int) _debugFont.MeasureString("X").Y*4;
             _graphics.ApplyChanges();
         }
 
@@ -84,13 +80,24 @@ namespace PlanetSimulationGame
             GraphicsDevice.Clear(Color.SaddleBrown);
 
             _spriteBatch.Begin();
+
+            for (int x = 0; x < _planet.Config.Width; ++x)
+                for (int y = 0; y < _planet.Config.Height; ++y)
+                {
+                    var color = DisplayHelper.GetFertilityColor(_planet.GetFertility(x, y));
+                    _spriteBatch.Draw(_pixel, new Vector2(x, y)*DRAW_SCALE, null, color, 
+                        0f, Vector2.Zero, Vector2.One*DRAW_SCALE, SpriteEffects.None, 0f);
+                }
+
             _planet.Bushes.ForEach(b => _spriteBatch.Draw(_pixel, b));
             _planet.Population.ForEach(p => _spriteBatch.Draw(_pixel, p));
             _spriteBatch.DrawString(_debugFont, 
-                $"Step {_planet.CurrentStep} | DT {StepDelay} | Pops {_planet.Population.Count}" +
-                $" | PAAF {Math.Round(_planet.Population.Average(p => p.AgeFraction), 2)} | Generation {_planet.MaxGeneration}" +
-                $" | Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.Bushes.Average(b => b.AgeFraction), 2)}", 
-                new Vector2(0f, _planet.Height*GAME_SCALE), Color.DarkGray);
+                $"Step {_planet.CurrentStep} | DT {StepDelay}\n" +
+                $"Pops {_planet.Population.Count} | PAAF {Math.Round(_planet.AvgPopAgeFraction, 2)}" +
+                $" | Generation {_planet.MaxGeneration} | Deaths ({_planet.AgeDeaths}/{_planet.StarvationDeaths})\n" +
+                $"Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.AvgBushAgeFraction, 2)}" +
+                $" | Fertility {_planet.TotalFertility} | Digestions {_planet.Population.Sum(p => p.DigestionAmount)}", 
+                new Vector2(0f, _planet.Config.Height *DRAW_SCALE), Color.DarkGray);
             _spriteBatch.End();
         }
     }
