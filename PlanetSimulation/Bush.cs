@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using HermansGameDev.RandomExtensions;
 using Microsoft.Xna.Framework;
-using OpenTK.Graphics.ES20;
 
 namespace PlanetSimulation
 {
@@ -30,23 +29,21 @@ namespace PlanetSimulation
         {
             Age++;
 
-            var fertileTiles = Planet.GetCross(Position)
-                .Where(p => Planet.GetFertility(p) >= Planet.Config.BushBerryGrowCost).ToList();
+			if(Age <= Planet.Config.BushMaxGrowAge && Grown && _random.NextFloat() < Planet.Config.BushBerryGrowChance)
+			{
+				var fertileTiles = Planet.GetCross(Position)
+				.Where(p => Planet.IsInBounds(p) && Planet.GetFertility(p) >= Planet.Config.BushBerryGrowCost).ToList();
 
-            if (Age <= Planet.Config.BushMaxGrowAge
-                && Grown
-                && Berries < Planet.Config.BushMaxBerries
-                && _random.NextFloat() < Planet.Config.BushBerryGrowChance 
-                && fertileTiles.Count > 0
-                && Planet.SpendFertility(_random.Choose<Point>(fertileTiles), Planet.Config.BushBerryGrowCost))
-            {
-                Berries++;
-            }
-            if (Berries > Planet.Config.BushMaxBerries)
-            {
-                Berries = Planet.Config.BushMaxBerries;
-                Planet.TrySeedBushCross(Position);
-            }
+				if(fertileTiles.Count > 0 && Planet.SpendFertility(_random.Choose<Point>(fertileTiles), Planet.Config.BushBerryGrowCost))
+				{
+					Berries++;
+				}
+				if(Berries > Planet.Config.BushMaxBerries)
+				{
+					Berries = Planet.Config.BushMaxBerries;
+					Planet.TrySeedBushCross(Position);
+				}
+			}
         }
     }
 }

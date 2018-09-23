@@ -175,32 +175,29 @@ namespace PlanetSimulation
         private bool SelectAndMoveToBush()
         {
             // Find bushes within foraging range
-            var bushes = Planet.Bushes.FindAll(
-                b => b.Position.Manhattan(Position) <= Planet.Config.PopVisionRange
-                && b.Berries > 0 && b.Grown
-            );
+            var bushes = Planet.BushesInRange[Position.X, Position.Y].FindAll(bd => bd.Bush.Berries > 0 && bd.Bush.Grown);
 
             if (bushes.Count == 0) return false; // No bushes in sight
             
             // Find best bush heuristic
-            var heuristic = new Func<Bush, int>(
-                b =>
+            var heuristic = new Func<BushDistance, int>(
+                bd =>
                 {
                     var hasOtherPop = Planet.Population.Any(p => p != this && p.Position == Position);
-                    var distance = b.Position.Manhattan(Position);
+                    var distance = bd.Distance;
                     return Planet.Config.PopVisionRange
                             - distance
-                            + b.Berries
+                            + bd.Bush.Berries
                             - (hasOtherPop ? distance*Planet.Config.PopWalkDelay : 0);
                 });
-            var fitness = bushes.Max(heuristic);
 
+            var fitness = bushes.Max(heuristic);
             if (fitness <= Planet.Config.PopWanderFitnessThreshold) return false; // Did not find bush with high enough threshold
                 
             // Remove bushes with less than optimal heuristic, with a small error margin
             bushes.RemoveAll(b => heuristic(b) < fitness - Planet.Config.PopFoodHeuristicRandom);
             // Choose randomly from remaining bushes
-            var target = _random.Choose<Bush>(bushes);
+            var target = _random.Choose<BushDistance>(bushes).Bush;
             LastTargetBush = target;
             // Navigate towards bush
             MoveTowards(target.Position);
@@ -249,9 +246,9 @@ namespace PlanetSimulation
         {
             _digestionTimers = _digestionTimers.Select(d => d - 1).ToList();
             _digestionTimers.Where(d => d == 0).ToList().ForEach(d =>
-            {
-                Planet.TrySeedBushCross(Position);
-                Planet.AddFertility(Position, Planet.Config.PopPoopFertility);
+			{
+				Planet.AddFertility(Position, Planet.Config.PopPoopFertility);
+				Planet.TrySeedBushCross(Position);
             });
             _digestionTimers.RemoveAll(d => d <= 0);
         }

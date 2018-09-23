@@ -13,6 +13,18 @@ namespace PlanetSimulation
         public static Point YDir(this Point p) => new Point(0, Math.Sign(p.Y));
     }
 
+	public struct BushDistance
+	{
+		public Bush Bush;
+		public int Distance;
+
+		public BushDistance(Bush bush, int distance)
+		{
+			Bush=bush;
+			Distance=distance;
+		}
+	}
+
     public class Planet
     {
         public readonly PlanetSimulationConfig Config;
@@ -39,6 +51,7 @@ namespace PlanetSimulation
 
         public List<Pop> Population;
         public List<Bush> Bushes;
+		public List<BushDistance>[,] BushesInRange;
 
         public Random Random;
 
@@ -54,13 +67,15 @@ namespace PlanetSimulation
 
             Population = new List<Pop>();
             Bushes = new List<Bush>();
+			BushesInRange = new List<BushDistance>[Config.Width, Config.Height];
             _fertility = new int[Config.Width, Config.Height];
 
             _newPops = new List<Pop>();
             _newBushes = new List<Bush>();
         }
 
-        public bool IsInBounds(Point p) => p.X >= 0 && p.X < Config.Width && p.Y >= 0 && p.Y <= Config.Height;
+        public bool IsInBounds(Point p) => p.X >= 0 && p.X < Config.Width && p.Y >= 0 && p.Y < Config.Height;
+		public bool NotInBounds(Point p) => !IsInBounds(p);
 
         public void InitRandom()
         {
@@ -72,24 +87,32 @@ namespace PlanetSimulation
                 for (int y = 0; y < Config.Height; ++y)
                 {
                     _fertility[x, y] = Random.Next(Config.FertilityMinStart, Config.FertilityMaxStart + 1);
+					BushesInRange[x, y] = new List<BushDistance>(20);
                 }
             }
 
-            for (int p = 0; p < Config.PopStartAmount; ++p)
-            {
-                Population.Add(new Pop(this, Random.NextPoint(0, 0, Config.Width, Config.Height)));
-            }
+			if(Config.PopSpawnSize > 0)
+			{
+				var startPos = Random.NextPoint(0, 0, Config.Width - Config.PopSpawnSize, Config.Height - Config.PopSpawnSize);
+				for(int p = 0; p < Config.PopStartAmount; ++p)
+				{
+					var popPosition = startPos + Random.NextPoint(0, 0, Config.PopSpawnSize, Config.PopSpawnSize);
+					Population.Add(new Pop(this, popPosition));
+				}
+			}
+			else
+			{
+				for(int p = 0; p < Config.PopStartAmount; ++p)
+				{
+					Population.Add(new Pop(this, Random.NextPoint(0, 0, Config.Width, Config.Height)));
+				}
+			}
 
             for (int b = 0; b < Config.BushStartAmount; ++b)
             {
-                var bush = new Bush(this, Random.NextPoint(0, 0, Config.Width, Config.Height))
-                {
-                    Age = Random.Next(Config.BushMaxAge)
-                };
-                Bushes.Add(bush);
-
-                var growPosCross = GetCross(bush.Position);
-                growPosCross.ForEach(p => RemoveFertility(p, Config.BushGrowCost));
+				var bush = new Bush(this, Random.NextPoint(0, 0, Config.Width - 1, Config.Height - 1));
+				Bushes.Add(bush);
+				AddBushRange(bush);
             }
         }
 
@@ -104,6 +127,46 @@ namespace PlanetSimulation
             _newBushes.Add(new Bush(this, position));
         }
 
+		private void AddBushRange(Bush bush)
+		{
+			int range = Config.PopVisionRange;
+			var startX = Math.Max(0, bush.Position.X - range);
+			var endX = Math.Min(Config.Width - 1, bush.Position.X + range);
+			var startY = Math.Max(0, bush.Position.Y - range);
+			var endY = Math.Min(Config.Height - 1, bush.Position.Y + range);
+
+			for(var x = startX; x < endX; x++)
+			{
+				for(var y = startY; y < endY; y++)
+				{
+					var pos = new Point(x, y);
+					var bd = new BushDistance(bush, pos.Manhattan(bush.Position));
+					if(bd.Distance <= range)
+					{
+						BushesInRange[x, y].Add(bd);
+					}
+				}
+			}
+		}
+
+		private void RemoveBushRange(Bush bush)
+		{
+			int range = Config.PopVisionRange;
+			var startX = Math.Max(0, bush.Position.X - range);
+			var endX = Math.Min(Config.Width - 1, bush.Position.X + range);
+			var startY = Math.Max(0, bush.Position.Y - range);
+			var endY = Math.Min(Config.Height - 1, bush.Position.Y + range);
+
+			for(var x = startX; x < endX; x++)
+			{
+				for(var y = startY; y < endY; y++)
+				{
+					var bdIndex = BushesInRange[x, y].FindIndex(bd => bd.Bush == bush);
+					if(bdIndex != -1) BushesInRange[x, y].RemoveAt(bdIndex);
+				}
+			}
+		}
+
         public void Step()
         {
             CurrentStep++;
@@ -117,21 +180,28 @@ namespace PlanetSimulation
             {
                 Population.Remove(p);
                 //GetCross(p.Position).ForEach(pos => AddFertility(pos, Config.PopDeathFertility));
-                AddFertility(p.Position, p.GetFood(FoodTypes.Berry) + p.DigestionAmount);
+                AddFertility(p.Position, p.GetFood(FoodTypes.Berry)*Config.BushBerryGrowCost + p.DigestionAmount);
             });
             // Add newborn pops
             Population = Population.Concat(_newPops).ToList();
             _newPops.Clear();
 
             // Remove aged bushes
-            var deadBushes = Bushes.FindAll(b => b.Age >= Config.BushMaxAge || b.Age >= Config.BushMaxGrowAge && b.Berries < 0);
+            var deadBushes = Bushes.FindAll(b => b.Age >= Config.BushMaxAge);
             deadBushes.ForEach(b =>
             {
-                Bushes.Remove(b);
-                GetCross(b.Position).ForEach(p => AddFertility(p, Config.BushDeathFertility));
+				Bushes.Remove(b);
+				int fertility = Config.BushDeathFertility + b.Berries*Config.BushBerryGrowCost;
+				var cross = GetCross(b.Position);//.ForEach(p => AddFertility(p, fertility));
+				for(var i = 0; i < fertility; i++)
+				{
+					AddFertility(Random.Choose<Point>(cross), 1);
+				}
+				RemoveBushRange(b);
             });
             // Add newly grown bushes
             Bushes = Bushes.Concat(_newBushes).ToList();
+			_newBushes.ForEach(AddBushRange);
             _newBushes.Clear();
 
             Population.ForEach(p => p.Step());
@@ -148,7 +218,7 @@ namespace PlanetSimulation
                 position + new Point(-1, 0),
                 position + new Point(0, -1),
             };
-            result.RemoveAll(p => p.X < 0 || p.X >= Config.Width || p.Y < 0 || p.Y >= Config.Height);
+            result.RemoveAll(NotInBounds);
             return result;
         }
 
@@ -161,7 +231,7 @@ namespace PlanetSimulation
                 positions.RemoveAll(p => Bushes.Any(b => b.Position == p));
                 var fertileTiles = positions.Where(p => GetFertility(p) >= Config.BushGrowCost).ToList();
                 if (fertileTiles.Count == 0) return;
-                var roomTiles = fertileTiles.Where(ft => Bushes.All(b => b.Position.Manhattan(ft) > 2)).ToList();
+                var roomTiles = fertileTiles/*.Where(ft => Bushes.All(b => b.Position == position || b.Position.Manhattan(ft) > 2)).ToList()*/;
                 if (roomTiles.Count == 0) return;
                 var growPos = Random.Choose<Point>(roomTiles);
                 if(SpendFertility(growPos, Config.BushGrowCost)) AddBush(growPos);

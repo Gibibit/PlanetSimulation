@@ -27,7 +27,7 @@ namespace PlanetSimulationGame
             }
         }
 
-        public const float DRAW_SCALE = 60f;
+        public const float DRAW_SCALE = 30f;
         public const int STEP_AMOUNT = 1;
 
         private GraphicsDeviceManager _graphics;
@@ -35,6 +35,8 @@ namespace PlanetSimulationGame
         private Planet _planet;
         private Texture2D _pixel;
         private SpriteFont _debugFont;
+		private bool _firstStep = true;
+		private bool _paused = true;
 
         public PSGame()
         {
@@ -59,29 +61,39 @@ namespace PlanetSimulationGame
 
             _debugFont = Content.Load<SpriteFont>("DebugFont");
 
-            _graphics.PreferredBackBufferWidth = (int) (_planet.Config.Width *DRAW_SCALE);
-            _graphics.PreferredBackBufferHeight = (int) (_planet.Config.Height *DRAW_SCALE) + (int) _debugFont.MeasureString("X").Y*4;
-            _graphics.ApplyChanges();
+			_graphics.PreferredBackBufferWidth = (int)(_planet.Config.Width*DRAW_SCALE);
+            _graphics.PreferredBackBufferHeight = (int) (_planet.Config.Height*DRAW_SCALE) + (int) _debugFont.MeasureString("X").Y*4;
+			_graphics.ApplyChanges();
 
-            SpriteBatchExtensions.GraphicsDevice = GraphicsDevice;
+			SpriteBatchExtensions.GraphicsDevice = GraphicsDevice;
         }
 
         protected override void Update(GameTime gameTime)
-        {
-            base.Update(gameTime);
+		{
+			base.Update(gameTime);
 
-            for (int i = 0; i < STEP_AMOUNT; i++)
-            {
-                _planet.Step();
-            }
+			if(_firstStep)
+			{
+				_firstStep = false;
+				CenterWindow();
+			}
+
+			if(!_paused)
+			{
+				for(int i = 0; i < STEP_AMOUNT; i++)
+				{
+					_planet.Step();
+				}
+			}
 
             var kb = Keyboard.GetState();
 
             if (kb.IsKeyDown(Keys.OemPlus) && (StepDelay > 10 || _prevKb.IsKeyUp(Keys.OemPlus))) StepDelay += StepDelay/10 + 1;
             if (kb.IsKeyDown(Keys.OemMinus) && (StepDelay > 10 || _prevKb.IsKeyUp(Keys.OemMinus))) StepDelay -= StepDelay/10 + 1;
-            if (kb.IsKeyDown(Keys.D) && _prevKb.IsKeyUp(Keys.D)) DisplayHelper.DebugDraw = !DisplayHelper.DebugDraw;
+			if(kb.IsKeyDown(Keys.D) && _prevKb.IsKeyUp(Keys.D)) DisplayHelper.DebugDraw = !DisplayHelper.DebugDraw;
+			if(kb.IsKeyDown(Keys.Space) && _prevKb.IsKeyUp(Keys.Space)) _paused = !_paused;
 
-            _prevKb = kb;
+			_prevKb = kb;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -110,6 +122,12 @@ namespace PlanetSimulationGame
                 $" | Fertility {_planet.TotalFertility}", 
                 new Vector2(0f, _planet.Config.Height *DRAW_SCALE), Color.DarkGray);
             _spriteBatch.End();
-        }
-    }
+		}
+
+		private void CenterWindow()
+		{
+			var halfScreenSize = new Point(GraphicsDevice.Adapter.CurrentDisplayMode.Width/2, GraphicsDevice.Adapter.CurrentDisplayMode.Height/2);
+			Window.Position = halfScreenSize - new Point(_graphics.PreferredBackBufferWidth/2, _graphics.PreferredBackBufferHeight/2);
+		}
+	}
 }

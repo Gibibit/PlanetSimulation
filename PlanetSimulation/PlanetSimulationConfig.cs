@@ -1,94 +1,96 @@
 ﻿namespace PlanetSimulation
 {
     public struct PlanetSimulationConfig
-    {
-        public int BushGrowCost;
-        public int BushDeathFertility;
+	{
+		public int Width;
+		public int Height;
+		public int PopSpawnSize;
+		public float BushBerryGrowChance;
         public float BushGrowChance;
-        public int BushMaxAge;
-        public int BushMaxGrowAge;
         public int BushBerryGrowCost;
-        public float BushBerryGrowChance;
+        public int BushDeathFertility;
+		public int BushGrowCost;
+        public int BushGrowDelay;
+        public int BushLimit;
+        public int BushMaxAge;
         public int BushMaxBerries;
+        public int BushMaxGrowAge;
+        public int BushStartAmount;
         public int BushStartingBerries;
-        public int PopBerryHarvestAmount;
-        public int PopVisionRange;
-        public int PopStartingFullness;
-        public int PopMaxAge;
-        public int PopBreedingAge;
-        public int PopBreedingFullness;
-        public int PopBreedingCost;
-        public int PopWalkDelay;
-        public int PopFullnessHungry;
-        public int FertilityMinStart;
         public int FertilityMaxStart;
+        public int FertilityMinStart;
+		public float PopBreedingDesireChance;
+		public float PopWanderTurnChance;
+		public int PopBerryDigestDelayMax;
         public int PopBerryDigestDelayMin;
+        public int PopBerryHarvestAmount;
+        public int PopBreedingAge;
+        public int PopBreedingCost;
+        public int PopBreedingDelay;
+        public int PopBreedingFullness;
+        public int PopBreedingRange;
         public int PopEatAmount;
         public int PopFoodHeuristicRandom;
-        public int BushGrowDelay;
-        public float PopWanderTurnChance;
-        public int PopWanderFitnessThreshold;
-        public int PopStartAmount;
-        public int BushStartAmount;
-        public int Width;
-        public int Height;
-        public int PopPoopFertility;
-        public int PopBerryDigestDelayMax;
-        public int PopFullnessConsumption;
-        public int PopBreedingRange;
-        public int PopHarvestRange;
-        public int PopForagingHunger;
-        public int PopFoodStockpileMin;
-        public float PopBreedingDesireChance;
-        public int PopBreedingDelay;
         public int PopFoodStockpileMax;
-        public int BushLimit;
+        public int PopFoodStockpileMin;
+        public int PopForagingHunger;
+        public int PopFullnessConsumption;
+        public int PopFullnessHungry;
+        public int PopHarvestRange;
         public int PopLimit;
+        public int PopMaxAge;
+        public int PopPoopFertility;
+        public int PopStartAmount;
+        public int PopStartingFullness;
+        public int PopVisionRange;
+        public int PopWalkDelay;
+        public int PopWanderFitnessThreshold;
 
         public static PlanetSimulationConfig DefaultConfig => new PlanetSimulationConfig()
-        {
-            Width = 50,
-            Height = 25,
-            PopStartAmount = 10,
-            PopLimit = 150,
-            BushStartAmount = 20,
-            BushLimit = 200,
-            FertilityMinStart = 1,
-            FertilityMaxStart = 80,
-            BushGrowCost = 7,
-            BushDeathFertility = 1,
-            BushGrowChance = 0.04f,
-            BushGrowDelay = 100,
-            BushMaxAge = 800,
-            BushMaxGrowAge = 730,
+		{
+			Width = 110,
+			Height = 60,
+			PopSpawnSize = 6,
+			BushBerryGrowChance = 0.25f,
             BushBerryGrowCost = 1,
-            BushBerryGrowChance = 0.25f,
+            BushDeathFertility = 4,
+            BushGrowChance = 0.04f,
+            BushGrowCost = 7,
+            BushGrowDelay = 100,
+            BushLimit = 200,
+            BushMaxAge = 800,
             BushMaxBerries = 15,
+            BushMaxGrowAge = 730,
+            BushStartAmount = 50,
             BushStartingBerries = 3,
+            FertilityMaxStart = 20,
+            FertilityMinStart = 0,
+            PopBerryDigestDelayMax = 40,
+            PopBerryDigestDelayMin = 30,
             PopBerryHarvestAmount = 1,
-            PopHarvestRange = 1,
-            PopVisionRange = 25,
-            PopStartingFullness = 300,
-            PopMaxAge = 2000,
             PopBreedingAge = 400,
-            PopBreedingFullness = 200,
             PopBreedingCost = 60,
-            PopBreedingRange = 1,
             PopBreedingDelay = 100,
             PopBreedingDesireChance = 0.003f, // Chance each step that the pop desires a child from then on out
-            PopWalkDelay = 3,
-            PopFullnessHungry = 200,
+            PopBreedingFullness = 200,
+            PopBreedingRange = 1,
             PopEatAmount = 4,
-            PopBerryDigestDelayMin = 30,
-            PopBerryDigestDelayMax = 40,
-            PopPoopFertility = 1,
             PopFoodHeuristicRandom = 2,
-            PopWanderTurnChance = 0.25f,
-            PopWanderFitnessThreshold = 5, // If there are no heuristics with fitness > threshold, pops wander
-            PopFullnessConsumption = 1,
-            PopForagingHunger = 300,
-            PopFoodStockpileMin = 4, // Minimum amount of food that the pop desires to have
             PopFoodStockpileMax = 24, // Amount of food that pop tries to reach once they start foraging
+            PopFoodStockpileMin = 4, // Minimum amount of food that the pop desires to have
+            PopForagingHunger = 300,
+            PopFullnessConsumption = 1,
+            PopFullnessHungry = 200,
+            PopHarvestRange = 1,
+            PopLimit = 150,
+            PopMaxAge = 2000,
+            PopPoopFertility = 1,
+            PopStartAmount = 10,
+            PopStartingFullness = 300,
+            PopVisionRange = 25,
+            PopWalkDelay = 3,
+            PopWanderFitnessThreshold = 5, // If there are no heuristics with fitness > threshold, pops wander
+            PopWanderTurnChance = 0.25f
         };
     }
 }
