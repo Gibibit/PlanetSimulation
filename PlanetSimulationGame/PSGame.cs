@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using LineBatch;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -9,6 +11,7 @@ namespace PlanetSimulationGame
 {
     public class PSGame : Game
     {
+        private KeyboardState _prevKb;
         private int _stepDelay = 33;
 
         public int StepDelay
@@ -24,7 +27,7 @@ namespace PlanetSimulationGame
             }
         }
 
-        public const float DRAW_SCALE = 30f;
+        public const float DRAW_SCALE = 60f;
         public const int STEP_AMOUNT = 1;
 
         private GraphicsDeviceManager _graphics;
@@ -39,6 +42,7 @@ namespace PlanetSimulationGame
             Content.RootDirectory = "Content";
             TargetElapsedTime = new TimeSpan(0, 0, 0, 0, _stepDelay);
             IsMouseVisible = true;
+            _prevKb = Keyboard.GetState();
         }
 
         protected override void LoadContent()
@@ -48,6 +52,7 @@ namespace PlanetSimulationGame
 
             _pixel = new Texture2D(_graphics.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             _pixel.SetData(new[] { Color.White });
+            DisplayHelper.Init(Content, _pixel);
 
             _planet = new Planet(PlanetSimulationConfig.DefaultConfig);
             _planet.InitRandom();
@@ -57,6 +62,8 @@ namespace PlanetSimulationGame
             _graphics.PreferredBackBufferWidth = (int) (_planet.Config.Width *DRAW_SCALE);
             _graphics.PreferredBackBufferHeight = (int) (_planet.Config.Height *DRAW_SCALE) + (int) _debugFont.MeasureString("X").Y*4;
             _graphics.ApplyChanges();
+
+            SpriteBatchExtensions.GraphicsDevice = GraphicsDevice;
         }
 
         protected override void Update(GameTime gameTime)
@@ -69,8 +76,12 @@ namespace PlanetSimulationGame
             }
 
             var kb = Keyboard.GetState();
-            if (kb.IsKeyDown(Keys.OemPlus)) StepDelay += StepDelay/10 + 1;
-            if (kb.IsKeyDown(Keys.OemMinus)) StepDelay -= StepDelay/10 + 1;
+
+            if (kb.IsKeyDown(Keys.OemPlus) && (StepDelay > 10 || _prevKb.IsKeyUp(Keys.OemPlus))) StepDelay += StepDelay/10 + 1;
+            if (kb.IsKeyDown(Keys.OemMinus) && (StepDelay > 10 || _prevKb.IsKeyUp(Keys.OemMinus))) StepDelay -= StepDelay/10 + 1;
+            if (kb.IsKeyDown(Keys.D) && _prevKb.IsKeyUp(Keys.D)) DisplayHelper.DebugDraw = !DisplayHelper.DebugDraw;
+
+            _prevKb = kb;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -89,14 +100,14 @@ namespace PlanetSimulationGame
                         0f, Vector2.Zero, Vector2.One*DRAW_SCALE, SpriteEffects.None, 0f);
                 }
 
-            _planet.Bushes.ForEach(b => _spriteBatch.Draw(_pixel, b));
-            _planet.Population.ForEach(p => _spriteBatch.Draw(_pixel, p));
+            _planet.Bushes.ForEach(b => _spriteBatch.Draw(b));
+            _planet.Population.ForEach(p => _spriteBatch.Draw(p));
             _spriteBatch.DrawString(_debugFont, 
                 $"Step {_planet.CurrentStep} | DT {StepDelay}\n" +
                 $"Pops {_planet.Population.Count} | PAAF {Math.Round(_planet.AvgPopAgeFraction, 2)}" +
                 $" | Generation {_planet.MaxGeneration} | Deaths ({_planet.AgeDeaths}/{_planet.StarvationDeaths})\n" +
                 $"Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.AvgBushAgeFraction, 2)}" +
-                $" | Fertility {_planet.TotalFertility} | Digestions {_planet.Population.Sum(p => p.DigestionAmount)}", 
+                $" | Fertility {_planet.TotalFertility}", 
                 new Vector2(0f, _planet.Config.Height *DRAW_SCALE), Color.DarkGray);
             _spriteBatch.End();
         }

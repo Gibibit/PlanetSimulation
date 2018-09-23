@@ -9,17 +9,14 @@ namespace PlanetSimulation
 {
     public class Bush : SurfaceObject
     {
+        public int Age;
         public bool Grown => Age > Planet.Config.BushGrowDelay;
+        public float AgeFraction => (float)Age / Planet.Config.BushMaxAge;
 
         public int Berries;
-
-        public int Age;
-
         public float BerryFraction => (float) Berries/Planet.Config.BushMaxBerries;
+        public float BerryGrowChance => Planet.Config.BushBerryGrowChance*(Planet.Config.BushMaxAge - Age)/Planet.Config.BushMaxAge;
 
-        public float GrowChance => Planet.Config.BushBerryGrowChance*(Planet.Config.BushMaxAge - Age)/Planet.Config.BushMaxAge;
-
-        public float AgeFraction => (float)Age/Planet.Config.BushMaxAge;
 
         private Random _random;
 
@@ -38,7 +35,7 @@ namespace PlanetSimulation
 
             if (Age <= Planet.Config.BushMaxGrowAge
                 && Grown
-                //&& Berries < Planet.Config.BushMaxBerries
+                && Berries < Planet.Config.BushMaxBerries
                 && _random.NextFloat() < Planet.Config.BushBerryGrowChance 
                 && fertileTiles.Count > 0
                 && Planet.SpendFertility(_random.Choose<Point>(fertileTiles), Planet.Config.BushBerryGrowCost))

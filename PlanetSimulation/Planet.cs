@@ -154,13 +154,16 @@ namespace PlanetSimulation
 
         public void TrySeedBushCross(Point position)
         {
+            if (Bushes.Count > Config.BushLimit) return;
             if (Random.NextFloat() < Config.BushGrowChance)
             {
                 var positions = GetCross(position);
                 positions.RemoveAll(p => Bushes.Any(b => b.Position == p));
                 var fertileTiles = positions.Where(p => GetFertility(p) >= Config.BushGrowCost).ToList();
                 if (fertileTiles.Count == 0) return;
-                var growPos = Random.Choose<Point>(fertileTiles);
+                var roomTiles = fertileTiles.Where(ft => Bushes.All(b => b.Position.Manhattan(ft) > 2)).ToList();
+                if (roomTiles.Count == 0) return;
+                var growPos = Random.Choose<Point>(roomTiles);
                 if(SpendFertility(growPos, Config.BushGrowCost)) AddBush(growPos);
             }
         }
