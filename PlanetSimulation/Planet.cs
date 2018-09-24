@@ -36,20 +36,37 @@ namespace PlanetSimulation
 
         public double AvgPopAgeFraction => Population.Count == 0 ? 0 : Population.Average(p => p.AgeFraction);
         public double AvgBushAgeFraction => Bushes.Count == 0 ? 0 : Bushes.Average(b => b.AgeFraction);
+		public Color GetFertilityColor(int fertility) => Color.Lerp(_lowFertilityColor, _highFertilityColor, fertility/MaxFertility);
+		public int MaxFertility { get; private set; }
 
-        public int TotalFertility
-        {
-            get
-            {
-                var result = 0;
-                for(int x = 0; x < Config.Width; ++x)
-                    for (int y = 0; y < Config.Height; ++y)
-                        result += _fertility[x, y];
-                return result;
-            }
-        }
+		private Color _lowFertilityColor = Color.SandyBrown;
+		private Color _highFertilityColor = Color.SaddleBrown*0.5f;
 
-        public List<Pop> Population;
+		public int TotalFertility
+		{
+			get
+			{
+				var result = 0;
+				for(int x = 0; x < Config.Width; x++)
+					for(int y = 0; y < Config.Height; y++)
+						result += _fertility[x, y];
+				return result;
+			}
+		}
+
+		public int CurrentMaxFertility
+		{
+			get
+			{
+				var result = -1;
+				for(int x = 0; x < Config.Width; x++)
+					for(int y = 0; y < Config.Height; y++)
+						result = Math.Max(result, _fertility[x, y]);
+				return result;
+			}
+		}
+
+		public List<Pop> Population;
         public List<Bush> Bushes;
 		public List<BushDistance>[,] BushesInRange;
 
@@ -62,12 +79,14 @@ namespace PlanetSimulation
         public Planet(PlanetSimulationConfig config)
         {
             Config = config;
+			MaxFertility = (int)Math.Pow(Config.FertilityMaxStart, Config.FertilityAreaPower);
 
-            Random = new Random();
+			Random = new Random();
 
             Population = new List<Pop>();
             Bushes = new List<Bush>();
 			BushesInRange = new List<BushDistance>[Config.Width, Config.Height];
+			for(var x = 0; x < Config.Width; x++) for(var y = 0; y < Config.Height; y++) BushesInRange[x, y] = new List<BushDistance>(20);
             _fertility = new int[Config.Width, Config.Height];
 
             _newPops = new List<Pop>();
@@ -77,24 +96,21 @@ namespace PlanetSimulation
         public bool IsInBounds(Point p) => p.X >= 0 && p.X < Config.Width && p.Y >= 0 && p.Y < Config.Height;
 		public bool NotInBounds(Point p) => !IsInBounds(p);
 
-        public void InitRandom()
-        {
-            Population.Clear();
-            Bushes.Clear();
+        public void Init()
+		{
+			Population.Clear();
+			Bushes.Clear();
 
-            for (int x = 0; x < Config.Width; ++x)
-            {
-                for (int y = 0; y < Config.Height; ++y)
-                {
-                    _fertility[x, y] = Random.Next(Config.FertilityMinStart, Config.FertilityMaxStart + 1);
-					BushesInRange[x, y] = new List<BushDistance>(20);
-                }
-            }
+			InitFertilityRandom();
+			if(Config.FertilityInitHalfArea > 0)
+			{
+				FertilityAverageAreaPower(Config.FertilityInitHalfArea, Config.FertilityAreaPower);
+			}
 
 			if(Config.PopSpawnSize > 0)
 			{
 				var startPos = Random.NextPoint(0, 0, Config.Width - Config.PopSpawnSize, Config.Height - Config.PopSpawnSize);
-				for(int p = 0; p < Config.PopStartAmount; ++p)
+				for(int p = 0; p < Config.PopStartAmount; p++)
 				{
 					var popPosition = startPos + Random.NextPoint(0, 0, Config.PopSpawnSize, Config.PopSpawnSize);
 					Population.Add(new Pop(this, popPosition));
@@ -102,21 +118,73 @@ namespace PlanetSimulation
 			}
 			else
 			{
-				for(int p = 0; p < Config.PopStartAmount; ++p)
+				for(int p = 0; p < Config.PopStartAmount; p++)
 				{
 					Population.Add(new Pop(this, Random.NextPoint(0, 0, Config.Width, Config.Height)));
 				}
 			}
 
-            for (int b = 0; b < Config.BushStartAmount; ++b)
-            {
+			for(int b = 0; b < Config.BushStartAmount; b++)
+			{
 				var bush = new Bush(this, Random.NextPoint(0, 0, Config.Width - 1, Config.Height - 1));
 				Bushes.Add(bush);
 				AddBushRange(bush);
-            }
-        }
+			}
+		}
 
-        public void AddPop(Point position, int generation)
+		private void InitFertilityRandom()
+		{
+			for(int x = 0; x < Config.Width; x++)
+			{
+				for(int y = 0; y < Config.Height; y++)
+				{
+					_fertility[x, y] = Random.Next(Config.FertilityMinStart, Config.FertilityMaxStart + 1);
+				}
+			}
+		}
+
+		private void FertilitySquared()
+		{
+			for(int x = 0; x < Config.Width; x++)
+			{
+				for(int y = 0; y < Config.Height; y++)
+				{
+					_fertility[x, y] = _fertility[x, y]*_fertility[x, y];
+				}
+			}
+		}
+
+		private void FertilityAverageAreaPower(int halfArea, float power)
+		{
+			var totals = new int[Config.Width, Config.Height];
+			var actualArea = new float[Config.Width, Config.Height];
+
+			for(int x = 0; x < Config.Width; x++)
+			{
+				for(int y = 0; y < Config.Height; y++)
+				{
+					for(var x2 = x - halfArea; x2 < x + halfArea; x2++)
+					{
+						if(x2 < 0 || x2 >= Config.Width) continue;
+						for(var y2 = y - halfArea; y2 < y + halfArea; y2++)
+						{
+							if(y2 < 0 || y2 >= Config.Height) continue;
+							totals[x, y] += _fertility[x2, y2];
+							actualArea[x, y] += 1f;
+						}
+					}
+				}
+			}
+			for(int x = 0; x < Config.Width; x++)
+			{
+				for(int y = 0; y < Config.Height; y++)
+				{
+					_fertility[x, y] = (int)Math.Pow(totals[x, y]/actualArea[x, y], power);
+				}
+			}
+		}
+
+		public void AddPop(Point position, int generation)
         {
             MaxGeneration = Math.Max(MaxGeneration, generation);
             _newPops.Add(new Pop(this, position, generation));

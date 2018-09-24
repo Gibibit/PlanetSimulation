@@ -19,6 +19,8 @@
         public int BushStartingBerries;
         public int FertilityMaxStart;
         public int FertilityMinStart;
+		public int FertilityInitHalfArea;
+		public float FertilityAreaPower;
 		public float PopBreedingDesireChance;
 		public float PopWanderTurnChance;
 		public int PopBerryDigestDelayMax;
@@ -48,8 +50,8 @@
 
         public static PlanetSimulationConfig DefaultConfig => new PlanetSimulationConfig()
 		{
-			Width = 110,
-			Height = 60,
+			Width = 55,
+			Height = 30,
 			PopSpawnSize = 6,
 			BushBerryGrowChance = 0.25f,
             BushBerryGrowCost = 1,
@@ -61,10 +63,12 @@
             BushMaxAge = 800,
             BushMaxBerries = 15,
             BushMaxGrowAge = 730,
-            BushStartAmount = 50,
+            BushStartAmount = 25,
             BushStartingBerries = 3,
-            FertilityMaxStart = 20,
+            FertilityMaxStart = 25,
             FertilityMinStart = 0,
+			FertilityInitHalfArea = 2,
+			FertilityAreaPower = 2f,
             PopBerryDigestDelayMax = 40,
             PopBerryDigestDelayMin = 30,
             PopBerryHarvestAmount = 1,

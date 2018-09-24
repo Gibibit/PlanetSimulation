@@ -57,7 +57,7 @@ namespace PlanetSimulationGame
             DisplayHelper.Init(Content, _pixel);
 
             _planet = new Planet(PlanetSimulationConfig.DefaultConfig);
-            _planet.InitRandom();
+            _planet.Init();
 
             _debugFont = Content.Load<SpriteFont>("DebugFont");
 
@@ -107,7 +107,7 @@ namespace PlanetSimulationGame
             for (int x = 0; x < _planet.Config.Width; ++x)
                 for (int y = 0; y < _planet.Config.Height; ++y)
                 {
-                    var color = DisplayHelper.GetFertilityColor(_planet.GetFertility(x, y));
+                    var color = _planet.GetFertilityColor(_planet.GetFertility(x, y));
                     _spriteBatch.Draw(_pixel, new Vector2(x, y)*DRAW_SCALE, null, color, 
                         0f, Vector2.Zero, Vector2.One*DRAW_SCALE, SpriteEffects.None, 0f);
                 }
@@ -118,9 +118,9 @@ namespace PlanetSimulationGame
                 $"Step {_planet.CurrentStep} | DT {StepDelay}\n" +
                 $"Pops {_planet.Population.Count} | PAAF {Math.Round(_planet.AvgPopAgeFraction, 2)}" +
                 $" | Generation {_planet.MaxGeneration} | Deaths ({_planet.AgeDeaths}/{_planet.StarvationDeaths})\n" +
-                $"Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.AvgBushAgeFraction, 2)}" +
-                $" | Fertility {_planet.TotalFertility}", 
-                new Vector2(0f, _planet.Config.Height *DRAW_SCALE), Color.DarkGray);
+                $"Bushes {_planet.Bushes.Count} | BAAF {Math.Round(_planet.AvgBushAgeFraction, 2)} | Color: {_planet.GetFertilityColor(_planet.MaxFertility)}" +
+                $" | Fertility {_planet.TotalFertility} | MaxFertility {_planet.MaxFertility} | CurrentMaxFertility {_planet.CurrentMaxFertility}",
+				new Vector2(0f, _planet.Config.Height *DRAW_SCALE), Color.DarkGray);
             _spriteBatch.End();
 		}
 
